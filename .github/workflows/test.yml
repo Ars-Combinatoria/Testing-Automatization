@@ -4,22 +4,49 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      action:
+        required: true
+        type: choice
+        options:
+          - deploy_all
+          - deploy_single
+      tenant_name:
+        required: false
+        type: choice
+        options:
+          - ccprb
+          - petplastics
+          - bbc
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Build OK"
+      - run: echo "Build OK — simulating compile step"
 
   approval-gate:
     runs-on: ubuntu-latest
     needs: [build]
-    environment: TEST-GATE
+    if: github.event_name == 'push'
+    environment: QA-PRIORITY-GROUP
     steps:
-      - run: echo "Approved"
+      - run: echo "Approved — deploying priority tenants"
 
-  deploy:
+  deploy-all:
     runs-on: ubuntu-latest
     needs: [approval-gate]
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        tenant: [ccprb, petplastics, bbc]
     steps:
-      - run: echo "Deploy OK"
+      - run: echo "Deploying ${{ matrix.tenant }}"
+
+  deploy-single:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'deploy_single'
+    environment: QA-INDIVIDUAL
+    steps:
+      - run: echo "Deploying single tenant ${{ inputs.tenant_name }}"
