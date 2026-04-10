@@ -1,0 +1,25 @@
+name: Test Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Build OK"
+
+  approval-gate:
+    runs-on: ubuntu-latest
+    needs: [build]
+    environment: TEST-GATE
+    steps:
+      - run: echo "Approved"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [approval-gate]
+    steps:
+      - run: echo "Deploy OK"
